@@ -54,6 +54,10 @@ services:
       - "127.0.0.1:9093:9093"
     volumes:
       - ./02-prometheus-grafana/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    entrypoint:
+      - /bin/sh
+      - -c
+      - 'sed "s|\$$SLACK_WEBHOOK_URL|$${SLACK_WEBHOOK_URL}|g" /etc/alertmanager/alertmanager.yml > /tmp/alertmanager.yml && exec /bin/alertmanager --config.file=/tmp/alertmanager.yml --storage.path=/alertmanager'
     environment:
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/REPLACE/ME}
     networks: [obs]
@@ -72,6 +76,7 @@ services:
     volumes:
       - ./02-prometheus-grafana/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./02-prometheus-grafana/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./05-integration:/var/lib/grafana/integration-dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus

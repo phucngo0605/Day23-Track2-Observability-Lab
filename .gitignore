@@ -9,8 +9,12 @@ venv/
 # Lab artifacts (generated)
 benchmarks/*.csv
 benchmarks/*.json
+04-drift-detection/data/
 submission/screenshots/*.png
 submission/screenshots/*.jpg
+!submission/screenshots/
+!submission/screenshots/*.png
+!submission/screenshots/*.jpg
 
 # Local OS junk
 .DS_Store

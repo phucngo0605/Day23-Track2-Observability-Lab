@@ -94,18 +94,32 @@ def main() -> int:
     for col, m in summary.items():
         print(f"  {col:<20} PSI={m['psi']:.3f}  KL={m['kl']:.3f}  KS={m['ks_stat']:.3f}  drift={m['drift']}")
 
-    # Optional: full Evidently HTML report (large dependency, gracefully skip if missing)
+    # Optional: full Evidently HTML report. Evidently 0.7+ moved the public API,
+    # so support both the current and legacy import paths used in older labs.
     try:
-        from evidently.report import Report
-        from evidently.metric_preset import DataDriftPreset
+        from evidently import DataDefinition, Dataset, Report
+        from evidently.presets import DataDriftPreset
 
-        report = Report(metrics=[DataDriftPreset()])
-        report.run(reference_data=reference, current_data=current)
+        report = Report([DataDriftPreset()])
+        snapshot = report.run(
+            Dataset.from_pandas(current, data_definition=DataDefinition()),
+            Dataset.from_pandas(reference, data_definition=DataDefinition()),
+        )
         html_path = REPORTS_DIR / "drift-report.html"
-        report.save_html(str(html_path))
+        snapshot.save_html(str(html_path))
         print(f"Wrote: {html_path}")
     except ImportError:
-        print("evidently not installed; skipping HTML report. Install with: pip install evidently")
+        try:
+            from evidently.legacy.metric_preset import DataDriftPreset
+            from evidently.legacy.report import Report
+
+            report = Report(metrics=[DataDriftPreset()])
+            report.run(reference_data=reference, current_data=current)
+            html_path = REPORTS_DIR / "drift-report.html"
+            report.save_html(str(html_path))
+            print(f"Wrote: {html_path}")
+        except ImportError:
+            print("evidently not installed; skipping HTML report. Install with: pip install evidently")
     return 0
 
 
